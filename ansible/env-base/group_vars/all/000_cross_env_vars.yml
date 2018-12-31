@@ -1,0 +1,15 @@
+---
+# Place group variables shared across all environments here
+
+standard_tools:
+- sudo
+- vim
+- p7zip-full
+- htop
+- tmux
+- ntp
+- curl
+
+kernel_version: linux-image-4.19.0-1073-ayufan-ga6e013135a6e
+
+timezone: Pacific/Auckland
