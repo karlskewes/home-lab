@@ -16,7 +16,7 @@
 
 ## Declare environments array
 declare -a environments=("dev")
-host_file_extension=".yml" # Change to ".yml" or empty "" if you prefer.
+host_file_extension=".ini" # Change to ".yml" or empty "" if you prefer.
 
 ## Create base environment folders
 mkdir -p env-base/{group_vars,host_vars}/all
