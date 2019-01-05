@@ -1,0 +1,33 @@
+---
+# Set to weave - default calico not suitable for arm
+# Make sure comment out default in k8s-cluster.yml
+kube_network_plugin: weave
+weave_password: ChangeThisPassword
+weave_version: 2.5.0
+# cni_version: "v0.6.0"
+cni_version: "v0.7.4"
+
+# Calico has arm64 support from v3.2.0 but image tags better named from v3.3.0
+# However breaking changes in 3.2 and 3.3 that aren't integrated into kubespray project
+# Disable ipip if on 4.19 kernel as not builtin or module - available in 4.4 though
+# ipip: true
+calico_version: "v3.3.2"
+calico_ctl_version: "v3.3.2"
+calico_cni_version: "v3.3.2"
+calico_policy_version: "v3.3.2"
+# Route Reflector Github has arm64 Dockerfile but no pushed images https://quay.io/repository/calico/routereflector?tab=tags
+calico_rr_version: "v0.6.3"
+calico_rr_image_tag: "{{ calico_rr_version }}-{{ image_arch }}"
+calicoctl_image_tag: "{{ calico_ctl_version }}-{{ image_arch }}"
+calico_node_image_tag: "{{ calico_version }}-{{ image_arch }}"
+calico_cni_image_tag: "{{ calico_cni_version }}-{{ image_arch }}"
+calico_policy_image_tag: "{{ calico_policy_version }}-{{ image_arch }}"
+
+# Checksums done with sha256sum <file>
+hyperkube_checksums:
+  v1.13.1: 66205d99ec93090c6d814ab1de7c38cd84257d3dcf3a957618fad5878caea13d
+kubeadm_checksums:
+  v1.13.1: 0f5c2c8a1ffe235785c0a38c9a6530d3d9e67b00e9a07c9d5dca4c36ede2e078
+etcd_binary_checksum: 7d3db622fb8d22a669a9351e1002ed2a7a776004a4a35888734bf39323889390
+cni_binary_checksum: d85ebf5dfcd34eda7d9c9e9d4ab609e24541d0877c4bcb9d5837cfab207ab653
+# cni_binary_checksum: 016bbc989877e35e3cd49fafe11415fb2717e52c74fde6b1650411154cb91b81
