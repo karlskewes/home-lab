@@ -1,7 +1,7 @@
 ---
 # Place group variables shared across all environments here
 
-standard_tools:
+install_packages:
 - sudo
 - vim
 - p7zip-full
@@ -9,7 +9,8 @@ standard_tools:
 - tmux
 - ntp
 - curl
-
-kernel_version: linux-image-4.19.0-1073-ayufan-ga6e013135a6e
+remove_packages:
+install_kernel:
+remove_kernel:
 
 timezone: Pacific/Auckland

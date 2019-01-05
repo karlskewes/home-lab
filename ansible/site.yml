@@ -30,19 +30,14 @@
   - name: Remove useless packages from the cache
     apt:
       autoclean: yes
-  - name: Install standard tools
+  - name: Install packages
     apt:
-      name: "{{ standard_tools }}"
+      name: "{{ install_packages }}"
       state: present
-  - name: Install desired kernel
+  - name: Remove packages
     apt:
-      name: "{{ kernel_version }}"
-      state: present
-    register: new_kernel_installed
-  - name: Reboot the server and wait for it to come back up.
-    reboot:
-      msg: Rebooting on new kernel
-    when: new_kernel_installed is changed
+      name: "{{ remove_packages }}"
+      state: absent
   - name: Allow passwordless sudo
     lineinfile:
       path: /etc/sudoers
@@ -53,11 +48,37 @@
   - name: "Set timezone to {{ timezone }}"
     timezone:
       name: "{{ timezone }}"
+  - name: Ensure kernel modules load on boot
+    copy:
+      dest: /etc/modules-load.d/ipip.conf
+      content: |
+        ipip
+    notify: reboot_required
 
 - name: Rock64 tasks
   hosts: rock64
+  become: yes
   tags: rock64
   tasks:
+  - name: Install kernel
+    apt:
+      name: "{{ install_kernel }}"
+      state: present
+    notify: reboot_required
+  - name: Remove kernel
+    apt:
+      name: "{{ remove_kernel }}"
+      state: absent
+    notify: reboot_required
+  - name: Update extlinux
+    command: update-extlinux.sh
+    # notify: reboot_required  # Uncomment if/when add changed_when: logic
+  - name: Disable zram-config service
+    service:
+      name: zram-config
+      enabled: no
+      state: stopped
+    notify: reboot_required
   # When creating multiple host OS's from a single OS image, the machine-id will be identical.
   # This prevents Kubernetes, Weave CNI and other appplications from differentiating machines/nodes.
   - name: Verify if machine id has been rotated before
@@ -65,21 +86,17 @@
       path: /etc/machine-id.rotated
     register: stat_result
   - name: Generate unique machine id
-    become: yes
     shell: "cat /proc/sys/kernel/random/uuid > /etc/machine-id"
     when: stat_result.stat.exists == False
   - name: Generate rotated file
-    become: yes
     file:
       path: /etc/machine-id.rotated
       state: touch
     when: stat_result.stat.exists == False
   - name: Set hostname
-    become: yes
     hostname: name={{ inventory_hostname }}
     when: not inventory_hostname is match('(\d{1,3}\.){3}\d{1,3}')
   - name: Ensure hostname in /etc/hosts
-    become: yes
     lineinfile:
       path: /etc/hosts
       regexp: '^(127.0.1.1)\s*(rock64)$'
@@ -88,3 +105,12 @@
       owner: root
       group: root
       mode: 0644
+
+- name: Handlers
+  hosts: all
+  handlers:
+  - name: Reboot the server and wait for it to come back up.
+    become: yes
+    reboot:
+      msg: Rebooting on change in kernel/zram/module change
+    listen: reboot_required

@@ -1,0 +1,7 @@
+---
+remove_packages:
+- zram-config
+
+install_kernel:
+- linux-image-4.4.154-1128-rockchip-ayufan-g61b4b1151f9a
+- linux-firmware-image-4.4.154-1128-rockchip-ayufan-g61b4b1151f9a
