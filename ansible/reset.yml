@@ -1,0 +1,4 @@
+---
+# Kubespray cluster playbook
+- name: Include kubespray tasks
+  include: ../kubespray/reset.yml

@@ -21,9 +21,9 @@
     apt:
       update_cache: yes
       cache_valid_time: 3600
-  - name: Update all packages to the latest version - aptitude safe-upgrade
+  - name: Update all packages to the latest version
     apt:
-      upgrade: yes
+      upgrade: full
   - name: Remove dependencies that are no longer required
     apt:
       autoremove: yes
@@ -54,6 +54,13 @@
       content: |
         ipip
     notify: reboot_required
+  handlers:
+  - name: Reboot the server and wait for it to come back up.
+    become: yes
+    reboot:
+      msg: Rebooting on change in kernel/zram/module change
+    listen: reboot_required
+
 
 - name: Rock64 tasks
   hosts: rock64
@@ -72,6 +79,7 @@
     notify: reboot_required
   - name: Update extlinux
     command: update-extlinux.sh
+    ignore_errors: True
     # notify: reboot_required  # Uncomment if/when add changed_when: logic
   - name: Disable zram-config service
     service:
@@ -105,12 +113,10 @@
       owner: root
       group: root
       mode: 0644
-
-- name: Handlers
-  hosts: all
   handlers:
   - name: Reboot the server and wait for it to come back up.
     become: yes
     reboot:
       msg: Rebooting on change in kernel/zram/module change
     listen: reboot_required
+
