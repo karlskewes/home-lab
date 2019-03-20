@@ -1,9 +1,0 @@
----
-# Kubespray cluster playbook
-- name: Include kubespray tasks
-  include: ../kubespray/cluster.yml
-  vars:
-    kube_proxy_mode: iptables
-    cluster_name: tuis
-    podsecuritypolicy_enabled: true
-

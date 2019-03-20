@@ -18,7 +18,7 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
 | :--- | :--- |
 | Network | 192.168.1.0/24 |
 | Gateway | 192.168.1.1 |
-| Ingress | 192.168.1.4x | 
+| Ingress | 192.168.2.0/28 | 
 | K8s Masters | 192.168.1.5x | 
 | K8s Workers | 192.168.1.6x |
 

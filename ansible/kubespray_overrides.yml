@@ -1,0 +1,6 @@
+---
+# These variables will be used to override defaults in kubespray
+kube_proxy_mode: iptables
+cluster_name: tuis
+podsecuritypolicy_enabled: true
+
