@@ -1,3 +1,8 @@
+NODE?=
+
+.PHONY: all
+all: help
+
 .PHONY:
 run-ansible-site: ## Run local site.yml
 	ANSIBLE_CONFIG=./ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini ansible/site.yml
@@ -7,8 +12,12 @@ run-kubespray: ## Run ansible playbook
 	ANSIBLE_CONFIG=./ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
 
 .PHONY:
-remove-node: ## Remove Kubespray node
-	ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini --extra-vars "node=$$(NODE)" kubespray/remove-node.yml
+add-node: ## Add Kubespray node - usage: 'make add-node NODE=<your-node>'
+	ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini --extra-vars "node=$(NODE)" kubespray/scale.yml
+
+.PHONY:
+remove-node: ## Remove Kubespray node - usage: 'make remove-node NODE=<your-node>'
+	ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini --extra-vars "node=$(NODE)" kubespray/remove-node.yml
 
 .PHONY:
 update-kubespray: ## Update kubespray repo and cp sample vars
