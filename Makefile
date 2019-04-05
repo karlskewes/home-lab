@@ -22,7 +22,9 @@ remove-node: ## Remove Kubespray node - usage: 'make remove-node NODE=<your-node
 .PHONY:
 update-kubespray: ## Update kubespray repo and cp sample vars
 	cd kubespray; \
-		git pull; \
+		git fetch upstream; \
+		git merge upstream/master; \
+		git push origin master; \
 		cd ../ansible; \
 		cp -r ../kubespray/inventory/sample/group_vars/* env-dev/group_vars/
 
