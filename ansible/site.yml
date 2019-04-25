@@ -17,6 +17,21 @@
   hosts: all
   become: yes
   tasks:
+  - name: Setup users
+    user:
+      name: karl
+      comment: Karl
+      groups:
+      - sudo
+      - docker
+      append: yes
+      shell: /bin/bash
+      state: present
+  - name: Add authorized keys
+    authorized_key:
+      user: karl
+      key: "{{ lookup('file', '/home/karl/.ssh/id_rsa.pub') }}"
+      state: present
   - name: Only run "update_cache=yes" if the last one '>3600' seconds ago
     apt:
       update_cache: yes
