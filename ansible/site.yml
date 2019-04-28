@@ -23,7 +23,7 @@
       comment: Karl
       groups:
       - sudo
-      - docker
+      # - docker  ## Only possible once installed
       append: yes
       shell: /bin/bash
       state: present
@@ -63,6 +63,9 @@
   - name: "Set timezone to {{ timezone }}"
     timezone:
       name: "{{ timezone }}"
+  - name: Set hostname
+    hostname: name={{ inventory_hostname }}
+    when: not inventory_hostname is match('(\d{1,3}\.){3}\d{1,3}')
   - name: Ensure kernel modules load on boot
     copy:
       dest: /etc/modules-load.d/ipip.conf
@@ -87,6 +90,7 @@
       name: "{{ install_kernel }}"
       state: present
     notify: reboot_required
+    register: install_kernel
   - name: Remove kernel
     apt:
       name: "{{ remove_kernel }}"
@@ -95,6 +99,8 @@
   - name: Update extlinux
     command: update-extlinux.sh
     ignore_errors: True
+    when:
+    - install_kernel is changed
     # notify: reboot_required  # Uncomment if/when add changed_when: logic
   - name: Disable zram-config service
     service:
@@ -116,9 +122,6 @@
       path: /etc/machine-id.rotated
       state: touch
     when: stat_result.stat.exists == False
-  - name: Set hostname
-    hostname: name={{ inventory_hostname }}
-    when: not inventory_hostname is match('(\d{1,3}\.){3}\d{1,3}')
   - name: Ensure hostname in /etc/hosts
     lineinfile:
       path: /etc/hosts
@@ -134,4 +137,3 @@
     reboot:
       msg: Rebooting on change in kernel/zram/module change
     listen: reboot_required
-

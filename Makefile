@@ -1,4 +1,5 @@
 NODE?=
+KUBESPRAY_VERSION=2.8.0 ## https://stackoverflow.com/questions/791959/download-a-specific-tag-with-git
 
 .PHONY: all
 all: help
