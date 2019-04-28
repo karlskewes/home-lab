@@ -1,5 +1,5 @@
 NODE?=
-KUBESPRAY_VERSION=2.8.0 ## https://stackoverflow.com/questions/791959/download-a-specific-tag-with-git
+KUBESPRAY_VERSION=master ## Alternatively by branch, eg: release-2.9
 
 .PHONY: all
 all: help
@@ -10,7 +10,10 @@ run-ansible-site: ## Run local site.yml
 
 .PHONY:
 run-kubespray: ## Run ansible playbook
-	ANSIBLE_CONFIG=./ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
+	cd kubespray; \
+		git checkout -b KUBESPRAY_VERSION; \
+		cd ..; \
+		ANSIBLE_CONFIG=./ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
 
 .PHONY:
 add-node: ## Add Kubespray node - usage: 'make add-node NODE=<your-node>'
@@ -21,11 +24,18 @@ remove-node: ## Remove Kubespray node - usage: 'make remove-node NODE=<your-node
 	ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -b -i ansible/env-dev/hosts.ini --extra-vars "node=$(NODE)" kubespray/remove-node.yml
 
 .PHONY:
+setup-kubespray: ## Setup Kubespray release version
+	cd kubespray; \
+		git fetch upstream $(KUBESPRAY_VERSION); \
+		git checkout -b $(KUBESPRAY_VERSION) upstream/$(KUBESPRAY_VERSION)
+
+.PHONY:
 update-kubespray: ## Update kubespray repo and cp sample vars
 	cd kubespray; \
-		git fetch upstream; \
-		git merge upstream/master; \
-		git push origin master; \
+		git fetch upstream $(KUBESPRAY_VERSION); \
+		git checkout $(KUBESPRAY_VERSION); \
+		git merge upstream/$(KUBESPRAY_VERSION); \
+		git push origin $(KUBESPRAY_VERSION); \
 		cd ../ansible; \
 		cp -r ../kubespray/inventory/sample/group_vars/* env-dev/group_vars/
 
