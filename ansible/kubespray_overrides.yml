@@ -3,4 +3,12 @@
 kube_proxy_mode: iptables
 cluster_name: tuis
 podsecuritypolicy_enabled: true
-
+kubelet_custom_flags:
+- "--cpu-cfs-quota=true"
+- "--cpu-cfs-quota-period=5ms"
+kube_feature_gates:
+- CustomCPUCFSQuotaPeriod=true
+cni_version: "v0.7.5"
+cni_binary_checksums:
+  arm64: 7fec91af78e9548df306f0ec43bea527c8c10cc3a9682c33e971c8522a7fcded
+  amd64: 3ca15c0a18ee830520cf3a95408be826cbd255a1535a38e0be9608b25ad8bf64
