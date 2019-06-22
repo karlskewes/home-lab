@@ -3,9 +3,7 @@ remove_packages:
 - zram-config
 
 install_kernel:
-- linux-image-4.4.167-1188-rockchip-ayufan-g9f1406ef58b1
-- linux-firmware-image-4.4.167-1188-rockchip-ayufan-g9f1406ef58b1
-- linux-headers-4.4.167-1188-rockchip-ayufan-g9f1406ef58b1
-- board-package-rock64-0.8-138
-# - linux-image-4.4.154-1128-rockchip-ayufan-g61b4b1151f9a
-# - linux-firmware-image-4.4.154-1128-rockchip-ayufan-g61b4b1151f9a
+- linux-image-4.4.167-1213-rockchip-ayufan-g34ae07687fce
+- linux-firmware-image-4.4.167-1212-rockchip-ayufan-g94e5a737c467
+- linux-headers-4.4.167-1213-rockchip-ayufan-g34ae07687fce
+- board-package-rock64-0.8-150
