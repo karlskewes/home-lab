@@ -7,3 +7,4 @@ install_kernel:
 - linux-firmware-image-4.4.167-1212-rockchip-ayufan-g94e5a737c467
 - linux-headers-4.4.167-1213-rockchip-ayufan-g34ae07687fce
 - board-package-rock64-0.8-150
+- u-boot-rockchip-rock64-2017.09-rockchip-ayufan-1062-gbb4886a528
