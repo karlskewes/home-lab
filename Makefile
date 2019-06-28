@@ -1,9 +1,11 @@
-NODE?=
-KUBESPRAY_VERSION=release-2.10
-# KUBESPRAY_VERSION=master
+NODE? :=
+KUBESPRAY_VERSION := release-2.10
+# KUBESPRAY_VERSION := master
 ## Alternatively by branch, eg: release-2.9
-ANSIBLE_HOSTS=ansible/env-dev/hosts.ini
-ANSIBLE_CONFIG=./ansible/ansible.cfg
+ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
+ANSIBLE_CONFIG := ./ansible/ansible.cfg
+KVM_HOSTS := $(shell ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible kvm -i $(ANSIBLE_HOSTS) --list-hosts | grep -v 'hosts' | xargs)
+KVM_HOST := kvmhost1
 
 .PHONY: all
 all: help
@@ -15,6 +17,12 @@ reboot-cluster: ## Reboot all nodes in cluster
 .PHONY: shutdown-cluster
 shutdown-cluster: ## Shutdown all nodes in cluster
 	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible -m shell -a '/sbin/shutdown -h now' -b -i $(ANSIBLE_HOSTS) k8s-cluster
+
+.PHONY: start-kvm-hosts
+start-kvm-hosts: ## Start up KVM VM Hosts
+	for host in $(KVM_HOSTS); do \
+		ssh $(KVM_HOST) LIBVIRT_DEFAULT_URI=qemu:///system virsh start $${host}; \
+		done
 
 .PHONY: deploy-ansible-site
 deploy-ansible-site: ## Run your local ansible site.yml playbook
