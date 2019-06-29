@@ -14,7 +14,7 @@
 #     changed_when: test.stdout
 
 - name: Base configuration of hosts
-  hosts: all
+  hosts: all:!edgeos
   become: yes
   tasks:
   - name: Setup users
@@ -78,7 +78,6 @@
     reboot:
       msg: Rebooting on change in kernel/zram/module change
     listen: reboot_required
-
 
 - name: Rock64 tasks
   hosts: rock64

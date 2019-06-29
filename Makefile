@@ -28,6 +28,10 @@ start-kvm-hosts: ## Start up KVM VM Hosts
 deploy-ansible-site: ## Run your local ansible site.yml playbook
 	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) ansible/site.yml
 
+.PHONY: deploy-ansible-edgeos
+deploy-ansible-edgeos: ## Run your local ansible edgeos.yml playbook
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -i $(ANSIBLE_HOSTS) ansible/edgeos.yml
+
 .PHONY: deploy-kubespray
 deploy-kubespray: ## Install/upgrade Kubespray
 	cd kubespray; \

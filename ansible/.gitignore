@@ -1,0 +1,2 @@
+# EdgeOS configuration backup directory, can rename from Ansible 2.8 onwards
+backup/*

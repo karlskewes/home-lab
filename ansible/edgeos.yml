@@ -1,0 +1,52 @@
+# Ansible playbook to configure BGP peering on EdgeOS device
+---
+- name: Base configuration of hosts
+  hosts: router
+  become: no
+  tasks:
+  - name: backup configuration before making changes
+    edgeos_config:
+      backup: yes
+      # backup_options:  # Ansible 2.8 option
+      #  dir_path: ./edgeos_backup
+
+  - name: Enable BGP
+    edgeos_config:
+      lines:
+      - set protocols bgp 64512 parameters router-id 192.168.1.1
+      - set protocols bgp 64512 maximum-paths ibgp 32  # enable ECMP Load Balancing
+
+  - name: Get ansible_ssh_host
+    debug:
+      msg: "{{ hostvars[item]['ansible_default_ipv4']['address'].split('.')[-1][-2:] }}"
+    loop: "{{ groups['kube-node'] }}"
+
+  - name: BGP peer with metallb speakers  # daemonset on worker nodes
+    edgeos_config:
+      lines:
+      - "set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }} remote-as 64512"
+      # Due to some broken multipath routing, use BGP weights to install single
+      # preferred route in table
+      - >
+        set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }}
+        weight {{ hostvars[item]['ansible_default_ipv4']['address'].split('.')[-1][-2:] }}
+    loop: "{{ groups['kube-node'] }}"
+
+  # FIXME: Remove this section when ingress setup
+  # With ECMP was stateful app breaking due to nodes iptables routing parts of tcp
+  # conversation to a different pod?
+  - name: Set BGP weight per host so a single path will be installed into routing table
+    edgeos_config:
+      lines:
+      - >
+        set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }}
+        weight {{ hostvars[item]['ansible_default_ipv4']['address'].split('.')[-1][-2:] }}
+    loop: "{{ groups['kube-node'] }}"
+
+  - name: show ip bgp summary
+    edgeos_command:
+      commands: show ip bgp summary
+
+  - name: save configuration to disk
+    edgeos_config:
+      save: no
