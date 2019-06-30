@@ -1,5 +1,6 @@
 ---
 # These variables will be used to override defaults in kubespray
+enable_nodelocaldns: false  # Currently fails due to lack of multi-arch image
 kube_proxy_mode: iptables
 cluster_name: tuis
 podsecuritypolicy_enabled: true
