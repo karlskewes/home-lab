@@ -96,11 +96,19 @@
       state: absent
     notify: reboot_required
   - name: Update extlinux
-    command: update-extlinux.sh
+    command: update-extlinux.sh rootfs
     ignore_errors: True
     when:
     - install_kernel is changed
     # notify: reboot_required  # Uncomment if/when add changed_when: logic
+    # This command requires confirmation
+    # - name: Upgrade bootloader
+    #   command: rock64_upgrade_bootloader.sh
+    #   ignore_errors: True
+    # This command requires confirmation
+    # - name: Upgrade SPI bootloard
+    #   command: rock64_write_spi_flash.sh
+    #   ignore_errors: True
   - name: Disable zram-config service
     service:
       name: zram-config

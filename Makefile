@@ -39,6 +39,17 @@ deploy-kubespray: ## Install/upgrade Kubespray
 		cd ..; \
 		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
 
+.PHONY: deploy-rock64-updates
+deploy-rock64-updates: ## Update Rock64 bootloader
+	@echo "Run below with tmux \n\n\
+	# ctrl+b : \n\
+	# set syncronize-panes on \n\n\
+	# create 6 panes and ssh to each rock64 \n\
+	sudo rock64_upgrade_bootloader.sh \n\
+	sudo rock64_write_spi_flash.sh \n\n\
+	# ctrl+b : \n\
+	# set syncronize-panes off"
+
 .PHONY: reset-kubespray
 reset-kubespray: ## Reset Kubespray cluster - will remove everything!
 	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(NODE)" kubespray/reset.yml
