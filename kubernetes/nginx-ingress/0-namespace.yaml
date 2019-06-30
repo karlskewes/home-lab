@@ -1,0 +1,234 @@
+# RBAC still needs work. Rolebinding per namespace ingress objects are.
+# Last time rendered from chart: nginx-ingress-0.28.3
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-ingress-tools
+  labels:
+    name: nginx-ingress-tools
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+---
+# Default deny all ingress & egress policy, except allow kube-dns
+# All traffic except this must be explicity allowed.
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: default-deny-all-except-kube-dns
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  - ports:
+    - protocol: UDP
+      port: 53
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# Source: nginx-ingress/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/instance: tools
+---
+# Source: nginx-ingress/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: nginx-ingress
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - nodes
+  - pods
+  - secrets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+---
+# Source: nginx-ingress/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/instance: tools
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nginx-ingress
+subjects:
+- kind: ServiceAccount
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+---
+# Source: nginx-ingress/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/instance: tools
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - secrets
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - ingress-controller-leader-tools
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - create
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+# Source: nginx-ingress/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/instance: tools
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nginx-ingress
+subjects:
+- kind: ServiceAccount
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: psp:kube-system:privileged
+  namespace: nginx-ingress-tools
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+#- apiGroup: rbac.authorization.k8s.io
+#  kind: Group
+#  name: system:masters
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:nginx-ingress-tools

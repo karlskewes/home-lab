@@ -1,0 +1,307 @@
+---
+# Source: nginx-ingress/templates/controller-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-controller
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+data:
+  enable-vts-status: "true"
+  # log-format-escape-json: "true"
+  # log-format-upstream: >
+  #   '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x-forward-for": "$proxy_add_x_forwarded_for",
+  #   "request_id": "$request_id", "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time,
+  #   "status": $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri", "request_query": "$args",
+  #   "request_length": $request_length, "duration": $request_time, "method": "$request_method", "http_referrer": "$http_referer",
+  #   "http_user_agent": "$http_user_agent" }'
+  # # https://github.com/nginxinc/kubernetes-ingress/blob/master/internal/nginx/templates/nginx.tmpl#L101
+  # stream-log-format: >
+  #   '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
+  #   "other": "$remote_addr [$time_local] $protocol $status $bytes_sent $bytes_received $session_time" }'
+---
+# Source: nginx-ingress/templates/controller-metrics-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-controller-metrics
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  ports:
+  - name: metrics
+    port: 9913
+    targetPort: metrics
+  selector:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+  type: ClusterIP
+---
+# Source: nginx-ingress/templates/controller-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-controller
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+  type: LoadBalancer
+---
+# Source: nginx-ingress/templates/controller-daemonset.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  replicas: 2
+  revisionHistoryLimit: 1
+  minReadySeconds: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-ingress
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: tools
+    spec:
+      dnsPolicy: ClusterFirst
+      # Pin controller to arm64 nodes as nodes plentiful and image arch pinned
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - arm64
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                  - controller
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - nginx-ingress
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - tools
+              topologyKey: kubernetes.io/hostname
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                  - controller
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - nginx-ingress
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - tools
+              topologyKey: failure-domain.beta.kubernetes.io/zone
+      containers:
+      - name: nginx-ingress-controller
+        image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller-arm64:0.24.1
+        imagePullPolicy: Always
+        args:
+        - /nginx-ingress-controller
+        - --election-id=ingress-controller-leader
+        - --ingress-class=tools
+        - --configmap=nginx-ingress-tools/nginx-ingress-controller
+        - --v=10
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+          # www-data -> 33
+          runAsUser: 33
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: https
+          containerPort: 443
+          protocol: TCP
+        - name: metrics
+          containerPort: 10254
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 300m
+            memory: 200Mi
+          requests:
+            cpu: 300m
+            memory: 200Mi
+      hostNetwork: false
+      serviceAccountName: nginx-ingress
+      terminationGracePeriodSeconds: 60
+---
+# Source: nginx-ingress/templates/controller-poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx-ingress-controller
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-ingress
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: tools
+  minAvailable: 1
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  jobLabel: nginx-ingress
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-ingress
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: tools
+  namespaceSelector:
+    matchNames:
+    - nginx-ingress-tools
+  endpoints:
+  - port: metrics
+    interval: 30s
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: nginx-ingress
+  namespace: nginx-ingress-tools
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: tools
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-ingress
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: tools
+  egress:
+  # Kube API for endpoint resolution
+  - ports:
+    - port: 443  # kubernetes.default.svc Port
+      protocol: TCP
+    - port: 6443  # kubernetes.default.svc TargetPort
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 192.168.1.48/29  # k8s-m-[00-02]
+    - ipBlock:
+        cidr: 10.233.0.1/32  # kubernetes.default.svc
+    - ipBlock:
+        cidr: 192.168.99.100/32  # minikube IP kubernetes.default.svc
+  ingress:
+  # Allow external traffic
+  - ports:
+    - port: 80
+      protocol: TCP
+    - port: 443
+      protocol: TCP
+  # Allow Prometheus scrape
+  - from:
+    - podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - prometheus
+        - key: prometheus
+          operator: In
+          values:
+          - k8s
+      namespaceSelector:
+        matchLabels:
+          name: prometheus
+    ports:
+    - port: metrics
+      protocol: TCP
+  policyTypes:
+  - Egress
+  - Ingress
