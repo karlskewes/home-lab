@@ -1,0 +1,173 @@
+---
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  namespace: metallb-system
+  name: speaker
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: speaker
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: speaker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: metallb
+        app.kubernetes.io/component: speaker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7472"
+    spec:
+      serviceAccountName: speaker
+      terminationGracePeriodSeconds: 0
+      hostNetwork: true
+      containers:
+      - name: speaker
+        image: metallb/speaker:v0.7.3
+        imagePullPolicy: IfNotPresent
+        args:
+        - --port=7472
+        - --config=config
+        env:
+        - name: METALLB_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        ports:
+        - name: monitoring
+          containerPort: 7472
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - all
+            add:
+            - net_raw
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  namespace: metallb-system
+  name: controller
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: controller
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: metallb
+        app.kubernetes.io/component: controller
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7472"
+    spec:
+      serviceAccountName: controller
+      terminationGracePeriodSeconds: 0
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody
+      containers:
+      - name: controller
+        image: metallb/controller:v0.7.3  # multi-arch
+        imagePullPolicy: IfNotPresent
+        args:
+        - --port=7472
+        - --config=config
+        ports:
+        - name: monitoring
+          containerPort: 7472
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+---
+# Allow metallb-controller to talk to K8S API for secret decrypt/save
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: metallb-controller
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: controller
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: controller
+  egress:
+  - ports:
+    - port: 443  # kubernetes.default.svc Port
+      protocol: TCP
+    - port: 6443  # kubernetes.default.svc TargetPort
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 192.168.1.48/29  # k8s-m-[00-02]
+    - ipBlock:
+        cidr: 10.233.0.1/32  # kubernetes.default.svc
+    - ipBlock:
+        cidr: 192.168.99.100/32  # minikube IP kubernetes.default.svc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: speaker
+data:
+  config: |
+    peers:
+    - peer-address: 192.168.1.1
+      peer-asn: 64512
+      my-asn: 64512
+    address-pools:
+    - name: default
+      protocol: bgp
+      addresses:
+      - 192.168.2.0/28
+      avoid-buggy-ips: true
+---
+# Allow metallb-speaker to talk to upstream BGP peer(s)
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: metallb-speaker
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: speaker
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: speaker
+  egress:
+  - ports:
+    - port: 179  # BGP Port
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 192.168.1.1/32  # edgerouter

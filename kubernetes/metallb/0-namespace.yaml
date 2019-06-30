@@ -1,0 +1,154 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+---
+# Default deny all ingress & egress policy, except allow kube-dns
+# All traffic except this must be explicity allowed.
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: default-deny-all-except-kube-dns
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  - ports:
+    - protocol: UDP
+      port: 53
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: metallb-system
+  name: controller
+  labels:
+    app.kubernetes.io/name: metallb
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: metallb-system
+  name: speaker
+  labels:
+    app.kubernetes.io/name: metallb
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metallb-system:controller
+  labels:
+    app.kubernetes.io/name: metallb
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups: [""]
+  resources: ["services/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metallb-system:speaker
+  labels:
+    app.kubernetes.io/name: metallb
+rules:
+- apiGroups: [""]
+  resources: ["services", "endpoints", "nodes"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: metallb-system
+  name: config-watcher
+  labels:
+    app.kubernetes.io/name: metallb
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
+---
+## Role bindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metallb-system:controller
+  labels:
+    app.kubernetes.io/name: metallb
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: metallb-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metallb-system:controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metallb-system:speaker
+  labels:
+    app.kubernetes.io/name: metallb
+subjects:
+- kind: ServiceAccount
+  name: speaker
+  namespace: metallb-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metallb-system:speaker
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: metallb-system
+  name: config-watcher
+  labels:
+    app.kubernetes.io/name: metallb
+subjects:
+- kind: ServiceAccount
+  name: controller
+- kind: ServiceAccount
+  name: speaker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: config-watcher
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: psp:kube-system:privileged
+  namespace: metallb-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+# - apiGroup: rbac.authorization.k8s.io
+#   kind: Group
+#   name: system:masters
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:metallb-system
