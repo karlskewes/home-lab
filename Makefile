@@ -2,6 +2,8 @@ NODE? :=
 KUBESPRAY_VERSION := release-2.10
 # KUBESPRAY_VERSION := master
 ## Alternatively by branch, eg: release-2.9
+KUBESPRAY_KUBECONFIG_NODE := k8s-m-01
+KUBESPRAY_KUBECONFIG_OWNER := karl
 ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
 ANSIBLE_CONFIG := ./ansible/ansible.cfg
 KVM_HOSTS := $(shell ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible kvm -i $(ANSIBLE_HOSTS) --list-hosts | grep -v 'hosts' | xargs)
@@ -38,6 +40,13 @@ deploy-kubespray: ## Install/upgrade Kubespray
 		git checkout "$(KUBESPRAY_VERSION)"; \
 		cd ..; \
 		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
+
+.PHONY: retrieve-kubespray-kubeconfig
+retrieve-kubespray-kubeconfig: ## Retrieve kubespray kubeconfig from master
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo cp /etc/kubernetes/admin.conf ~/kubeconfig.conf; \
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chown $(KUBESPRAY_KUBECONFIG_OWNER):$(KUBESPRAY_KUBECONFIG_OWNER) ~/kubeconfig.conf; \
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chmod 600 ~/kubeconfig.conf; \
+	scp $(KUBESPRAY_KUBECONFIG_NODE):kubeconfig.conf .
 
 .PHONY: deploy-rock64-updates
 deploy-rock64-updates: ## Update Rock64 bootloader

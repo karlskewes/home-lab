@@ -1,4 +1,5 @@
 # kubeconfigs
 admin.conf
+kubeconfig.conf
 # kubeadm key
 *.creds
