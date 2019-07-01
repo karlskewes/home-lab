@@ -3,7 +3,7 @@ KUBESPRAY_VERSION := release-2.10
 # KUBESPRAY_VERSION := master
 ## Alternatively by branch, eg: release-2.9
 KUBESPRAY_KUBECONFIG_NODE := k8s-m-01
-KUBESPRAY_KUBECONFIG_OWNER := karl
+KUBESPRAY_KUBECONFIG_OWNER := $(shell whoami)
 ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
 ANSIBLE_CONFIG := ./ansible/ansible.cfg
 KVM_HOSTS := $(shell ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible kvm -i $(ANSIBLE_HOSTS) --list-hosts | grep -v 'hosts' | xargs)
