@@ -4,13 +4,15 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
 
 ## Prerequisites
 
-- 6x Rock64 SBC's running Ubuntu and Kubernetes. 
-  - 3x Masters with SSD disk
-  - 3x Workers with eMMC disk.
-- 1x AMD64 Host running KVM. 
-  - (will create) 3x Workers provisioned with Terraform.
+**Hardware (or any combination):**
+- 6x Rock64 SBC's running Ubuntu and Kubernetes 
+   - 3x Masters with SSD disk
+   - 3x Workers with eMMC disk
+   - [OS image on media](https://github.com/ayufan-rock64/linux-build/releases) - latest bionic-minimal-rock64
+- 1x AMD64 Host running KVM
+   - (will create) 3x Workers provisioned with Terraform
 
-- [Burn OS Image](https://github.com/ayufan-rock64/linux-build/releases) - bionic-minimal-rock64-0.7.11-1075-arm64.img.xz
+**Software:**
 - [Install Ansible](https://docs.ansible.com)
 - [Install Terraform](https://terraform.io) 
 - [Install terraform-provider-libvirt](https://github.com/dmacvicar/terraform-provider-libvirt/)
@@ -34,8 +36,9 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
 ## Getting Started
 
 0. Git clone this repo and submodules ([kubespray](https://github.com/kubernetes-sigs/kubespray)) - `git clone --recurse-submodules ...`
-1. Prepare your hardware
+1. Prepare hardware
 2. Provison Terraform nodes
+   - TODO: `make deploy-terraform`
 3. Configure Ansible
    - Edit Ansible inventory, variables as required
    - `make deploy-ansible-site`
@@ -46,7 +49,8 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
    - `make retrive-kubespray-kubeconfig`
 6. Deploy Kubernetes applications
    - Edit as required
+   - TODO: `make deploy-kubernetes`
    - `kubectl apply -f kubernetes/`
 7. BGP Peer EdgeRouter and Metallb
    - `make deploy-ansible-edgeos`
-8. TODO: Gitlab Setup
+8. TODO: Gitlab Setup once finish yak shaving above
