@@ -72,6 +72,7 @@ rules:
   resources:
   - secrets
   verbs:
+  - get
   - create
   - update
   - delete
