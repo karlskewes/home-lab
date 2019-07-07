@@ -1,5 +1,12 @@
 # Ansible playbook to configure BGP peering on EdgeOS device
 ---
+- name: Gather facts of kube nodes
+  hosts: kube-node
+  gather_facts: true
+  tasks:
+  - name: Run setup to gather facts
+    setup:
+
 - name: Base configuration of hosts
   hosts: router
   become: no
@@ -25,11 +32,6 @@
     edgeos_config:
       lines:
       - "set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }} remote-as 64512"
-      # Due to some broken multipath routing, use BGP weights to install single
-      # preferred route in table
-      - >
-        set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }}
-        weight {{ hostvars[item]['ansible_default_ipv4']['address'].split('.')[-1][-2:] }}
     loop: "{{ groups['kube-node'] }}"
 
   # FIXME: Remove this section when ingress setup
@@ -49,4 +51,4 @@
 
   - name: save configuration to disk
     edgeos_config:
-      save: no
+      save: yes
