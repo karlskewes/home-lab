@@ -1,3 +1,13 @@
+# Archlinux
+
+## Default users
+
+```
+root/root
+alarm/alarm
+```
+
+## DNS
 
 systemctl disable systemd-resolved
 systemctl stop systemd-resolved
