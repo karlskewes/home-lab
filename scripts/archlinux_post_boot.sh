@@ -36,10 +36,8 @@ persist_mac() {
 }
 
 main() {
-	echo "This script needs to be run on Rock64, proceed? y/n"
-	read -r proceed
-	if [[ "$proceed" == 'n' ]]; then
-		echo "Exiting"
+	if [[ "$(uname -m)" != 'aarch64' ]]; then
+		echo "This script needs to be run on Rock64, exiting..."
 		exit 1
 	fi
 	update_uboot
