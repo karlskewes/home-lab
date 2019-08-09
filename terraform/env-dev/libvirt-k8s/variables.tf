@@ -18,7 +18,7 @@ variable "uri_hostname" {
 
 # Environment Variables
 
-variable "count" {
+variable "guest_count" {
   description = "Number of domains to create"
   default     = 1
 }

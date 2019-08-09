@@ -7,7 +7,7 @@ uri_hostname = "yourkvmhost"
 
 # Resource overrides
 
-count = 3
+guest_count = 3
 
 guest_user_name = "yourname"
 
