@@ -13,7 +13,7 @@
   - name: Enable BGP
     edgeos_config:
       lines:
-      - set protocols bgp 64512 parameters router-id 192.168.1.1
+      - set protocols bgp 64512 parameters router-id 192.168.2.1
       - set protocols bgp 64512 maximum-paths ibgp 32  # enable ECMP Load Balancing
 
   # This task will fail with a YAML error if a host is unreachable.

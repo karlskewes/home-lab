@@ -272,7 +272,7 @@ spec:
       protocol: TCP
     to:
     - ipBlock:
-        cidr: 192.168.1.48/29  # k8s-m-[00-02]
+        cidr: 192.168.2.32/28  # k8s-m-[amd64|arm64]-[00-0x]
     - ipBlock:
         cidr: 10.233.0.1/32  # kubernetes.default.svc
     - ipBlock:

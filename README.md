@@ -21,12 +21,12 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
 
 | Item | Range |
 | :--- | :--- |
-| Network | 192.168.1.0/24 |
-| Gateway | 192.168.1.1 |
-| Ingress | 192.168.2.0/28 | 
-| K8s Masters | 192.168.1.5x (TODO: change to .48/29)| 
-| ARM64 K8s Workers | 192.168.1.6x (TODO: change to .64/28)|
-| AMD64 K8s Workers | 192.168.1.7x (TODO: change to .80/28)|
+| Network | 192.168.2.0/24 |
+| Gateway | 192.168.2.1 |
+| Ingress | 192.168.3.0/28 | 
+| ARM64 K8s Masters | 192.168.2.32/28
+| ARM64 K8s Workers | 192.168.2.48/28
+| AMD64 K8s Workers | 192.168.2.64/28
 
 ## Diagnostics
 
