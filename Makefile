@@ -1,8 +1,8 @@
 NODE? :=
-KUBESPRAY_VERSION := release-2.10
 # KUBESPRAY_VERSION := master
 ## Alternatively by branch, eg: release-2.9
-KUBESPRAY_KUBECONFIG_NODE := k8s-m-arm64-01
+KUBESPRAY_VERSION := release-2.10
+KUBESPRAY_KUBECONFIG_NODE := k8s-m-arm64-01.k8s
 KUBESPRAY_KUBECONFIG_OWNER := $(shell whoami)
 ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
 ANSIBLE_CONFIG := ./ansible/ansible.cfg
