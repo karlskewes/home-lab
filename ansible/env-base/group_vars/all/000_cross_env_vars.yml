@@ -9,6 +9,7 @@ install_packages:
 - tmux
 - ntp
 - curl
+- unattended-upgrades
 remove_packages:
 install_kernel:
 remove_kernel:

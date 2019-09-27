@@ -23,7 +23,7 @@
       comment: Karl
       groups:
       - sudo
-      # - docker  ## Only possible once installed
+      - docker  ## Only possible once installed
       append: yes
       shell: /bin/bash
       state: present
