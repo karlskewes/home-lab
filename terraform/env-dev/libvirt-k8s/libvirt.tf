@@ -4,7 +4,7 @@ provider "libvirt" {
 }
 
 terraform {
-  required_version = ">= 0.11.7"
+  required_version = ">= 0.12.10"
 
   # Add your remote state here
   #  backend "s3" {

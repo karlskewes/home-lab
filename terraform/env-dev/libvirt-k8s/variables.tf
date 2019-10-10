@@ -82,3 +82,4 @@ variable "guest_pool_name" {
   description = "Guest pool name"
   default     = "default"
 }
+
