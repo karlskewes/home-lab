@@ -1,19 +1,28 @@
 # TODO: refactor to single VM module
 
-# Qcow2 base volume that can be shared by VM's (domain's)
-resource "libvirt_volume" "volume_base" {
-  name   = "${var.guest_hostname}-volume_base"
-  source = var.volume_source
+# Qcow2 base OS volume that can be shared by VM's (domain's)
+resource "libvirt_volume" "os_base" {
+  name   = "${var.guest_hostname}-os_base"
+  source = var.os_volume_source
 }
 
-# Volume per guest VM
-resource "libvirt_volume" "volume" {
+# OS volume per guest VM
+resource "libvirt_volume" "os" {
   count          = var.guest_count
-  name           = "${var.guest_hostname}-${format("%02d", count.index + 1)}-volume.qcow2"
-  base_volume_id = libvirt_volume.volume_base.id
+  name           = "${var.guest_hostname}-${format("%02d", count.index)}-os.qcow2"
+  base_volume_id = libvirt_volume.os_base.id
   pool           = var.guest_pool_name
-  size           = var.volume_size
+  size           = var.os_volume_size
 }
+
+# Secondary volume per guest VM
+resource "libvirt_volume" "secondary" {
+  count = var.guest_count
+  name  = "${var.guest_hostname}-${format("%02d", count.index)}-secondary.qcow2"
+  pool  = "usb${format("%02d", count.index)}"
+  size  = 100000000000
+}
+
 
 # cloud-init user_data template for user, package, other config - one per VM.
 # Terraform will complain about `resource "template_file"` being deprecated,
@@ -23,11 +32,11 @@ resource "template_file" "user_data" {
   template = file("${path.module}/templates/user-data.tpl")
 
   vars = {
-    fqdn                     = "${var.guest_hostname}-${format("%02d", count.index + 1)}.${var.guest_domain_name}"
-    hostname                 = "${var.guest_hostname}-${format("%02d", count.index + 1)}"
+    fqdn                     = "${var.guest_hostname}-${format("%02d", count.index)}.${var.guest_domain_name}"
+    hostname                 = "${var.guest_hostname}-${format("%02d", count.index)}"
     user_name                = var.guest_user_name
     user_ssh_authorized_keys = var.guest_user_ssh_authorized_key
-    volume_size              = var.volume_size
+    volume_size              = var.os_volume_size
   }
 }
 
@@ -37,8 +46,8 @@ resource "template_file" "meta_data" {
   template = file("${path.module}/templates/meta-data.tpl")
 
   vars = {
-    local_hostname = "${var.guest_hostname}-${format("%02d", count.index + 1)}"
-    instance_id    = "${var.guest_hostname}-${format("%02d", count.index + 1)}"
+    local_hostname = "${var.guest_hostname}-${format("%02d", count.index)}"
+    instance_id    = "${var.guest_hostname}-${format("%02d", count.index)}"
   }
 }
 
@@ -50,7 +59,7 @@ data "template_file" "network_config" {
 # cloud-init complete iso image to mount in each VM
 resource "libvirt_cloudinit_disk" "commoninit" {
   count          = var.guest_count
-  name           = "${var.guest_hostname}-${format("%02d", count.index + 1)}-commoninit.iso"
+  name           = "${var.guest_hostname}-${format("%02d", count.index)}-commoninit.iso"
   meta_data      = element(template_file.meta_data.*.rendered, count.index)
   user_data      = element(template_file.user_data.*.rendered, count.index)
   network_config = data.template_file.network_config.rendered
@@ -60,14 +69,14 @@ resource "libvirt_cloudinit_disk" "commoninit" {
 # domain/vm's to create
 resource "libvirt_domain" "domain_vm" {
   count  = var.guest_count
-  name   = "${var.guest_hostname}-${format("%02d", count.index + 1)}"
+  name   = "${var.guest_hostname}-${format("%02d", count.index)}"
   memory = var.guest_memory
   vcpu   = var.guest_cpu
 
   cloudinit = element(libvirt_cloudinit_disk.commoninit.*.id, count.index)
 
   network_interface {
-    mac    = "${var.guest_network_mac_base}:${format("%02d", var.guest_network_mac_offset + count.index + 1)}"
+    mac    = "${var.guest_network_mac_base}:${format("%02d", var.guest_network_mac_offset + count.index)}"
     bridge = var.guest_network_interface
     # requires qemu-agent but times out for me.
     # wait_for_lease = true
@@ -93,7 +102,10 @@ resource "libvirt_domain" "domain_vm" {
   }
 
   disk {
-    volume_id = element(libvirt_volume.volume.*.id, count.index)
+    volume_id = element(libvirt_volume.os.*.id, count.index)
+  }
+  disk {
+    volume_id = element(libvirt_volume.secondary.*.id, count.index)
   }
 }
 

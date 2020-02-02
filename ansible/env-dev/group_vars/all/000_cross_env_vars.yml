@@ -1,1 +1,20 @@
-../../../env-base/group_vars/all/000_cross_env_vars.yml
+---
+# Place group variables shared across all environments here
+
+install_packages:
+- sudo
+- vim
+- p7zip-full
+- htop
+- tmux
+- ntp
+- curl
+- unattended-upgrades
+- lvm2  # rook-ceph
+remove_packages:
+- open-iscsi  # OpenEBS
+install_kernel:
+remove_kernel:
+kernel_modules:
+- rbd  # rook-ceph
+timezone: Pacific/Auckland

@@ -25,13 +25,13 @@ variable "guest_count" {
 
 # Guest
 
-variable "volume_size" {
-  description = "Size in Bytes of volume will grow source to"
+variable "os_volume_size" {
+  description = "Size in Bytes of OS volume will grow source to"
   default     = 10000000000
 }
 
-variable "volume_source" {
-  description = "Source of volume to use for VM"
+variable "os_volume_source" {
+  description = "Source of OS volume to use for VM"
   default     = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
 }
 
@@ -82,4 +82,3 @@ variable "guest_pool_name" {
   description = "Guest pool name"
   default     = "default"
 }
-

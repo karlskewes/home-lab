@@ -1,6 +1,8 @@
 # Provider details
 provider "libvirt" {
   uri = "${var.uri_method}://${var.uri_username}@${var.uri_hostname}/system"
+
+  # version = ">= 0.6.0"
 }
 
 terraform {
