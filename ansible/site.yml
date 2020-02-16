@@ -23,7 +23,7 @@
       comment: Karl
       groups:
       - sudo
-      - docker  ## Only possible once installed
+      # - docker  ## Only possible once installed
       append: yes
       shell: /bin/bash
       state: present
@@ -39,11 +39,7 @@
   - name: Update all packages to the latest version
     apt:
       upgrade: dist
-  - name: Remove dependencies that are no longer required
-    apt:
       autoremove: yes
-  - name: Remove old packages from the cache
-    apt:
       autoclean: yes
   - name: Install packages
     apt:
@@ -78,6 +74,27 @@
     reboot:
       msg: Rebooting on change in kernel/zram/module change
     listen: reboot_required
+
+- name: Rook Ceph tasks
+  hosts: kube-storage
+  become: yes
+  tags: rook-ceph
+  tasks:
+  - name: Load kernel modules  # Rook Ceph
+    modprobe:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ kernel_modules }}"
+  - name: Add kernel modules to autoload file
+    lineinfile:
+      create: yes
+      dest: "/etc/modules-load.d/rook-ceph.conf"
+      line: "{{ item }}"
+      state: present
+      owner: root
+      group: root
+      mode: 0644
+    with_items: "{{ kernel_modules }}"
 
 - name: Rock64 tasks
   hosts: rock64

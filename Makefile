@@ -1,7 +1,7 @@
 NODE? :=
 # KUBESPRAY_VERSION := master
 ## Alternatively by branch, eg: release-2.9
-KUBESPRAY_VERSION := release-2.10
+KUBESPRAY_VERSION := release-2.12
 KUBESPRAY_KUBECONFIG_NODE := k8s-m-arm64-01.k8s
 KUBESPRAY_KUBECONFIG_OWNER := $(shell whoami)
 ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
@@ -46,7 +46,7 @@ rolling-upgrade-kubespray: ## Rolling upgrade Kubespray
 	cd kubespray; \
 		git checkout "$(KUBESPRAY_VERSION)"; \
 		cd ..; \
-		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/upgrade.yml --extra-vars "@ansible/kubespray_overrides.yml"
+		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/upgrade-cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
 
 .PHONY: retrieve-kubespray-kubeconfig
 retrieve-kubespray-kubeconfig: ## Retrieve kubespray kubeconfig from master
@@ -57,7 +57,7 @@ retrieve-kubespray-kubeconfig: ## Retrieve kubespray kubeconfig from master
 
 .PHONY: deploy-rock64-updates
 deploy-rock64-updates: ## Update Rock64 bootloader
-	@echo "Run below with tmux \n\n\
+	@echo "Install latest u-boot per Ansible then run below with tmux \n\n\
 	# ctrl+b : \n\
 	# set syncronize-panes on \n\n\
 	# create 6 panes and ssh to each rock64 \n\
@@ -65,6 +65,10 @@ deploy-rock64-updates: ## Update Rock64 bootloader
 	sudo rock64_write_spi_flash.sh \n\n\
 	# ctrl+b : \n\
 	# set syncronize-panes off"
+
+.PHONY: clean-rook
+clean-rook: ## Cleann Rook Ceph data
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible -m shell -a 'rm -rf /var/lib/rook' -b -i $(ANSIBLE_HOSTS) k8s-cluster
 
 .PHONY: reset-kubespray
 reset-kubespray: ## Reset Kubespray cluster - will remove everything!
