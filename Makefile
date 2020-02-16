@@ -67,7 +67,7 @@ deploy-rock64-updates: ## Update Rock64 bootloader
 	# set syncronize-panes off"
 
 .PHONY: clean-rook
-clean-rook: ## Cleann Rook Ceph data
+clean-rook: ## Clean Rook Ceph data
 	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible -m shell -a 'rm -rf /var/lib/rook' -b -i $(ANSIBLE_HOSTS) k8s-cluster
 
 .PHONY: reset-kubespray

@@ -1,6 +1,7 @@
 # Variables shared in environment
 
-variable environment {
+variable "environment" {
   default     = "dev"
   description = "Development environment"
 }
+
