@@ -1,9 +1,3 @@
 ---
 remove_packages:
-- zram-config
-
-install_kernel:
-- linux-image-5.6.0-1134-ayufan-g652fb97d87eb
-- linux-headers-5.6.0-1134-ayufan-g652fb97d87eb
-- linux-rock64-0.10-mainline
-- u-boot-rock64-2020.01-ayufan-2011-g26eed9fd
+- armbian-zram-config

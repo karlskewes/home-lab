@@ -11,7 +11,7 @@ guest_count = 3
 
 guest_user_name = "yourname"
 
-guest_user_ssh_authorized_key = "ssh-rsa YourKeyGoesHere yourname@your-laptop"
+guest_user_ssh_authorized_key = "ssh-rsa YourKeyGoesHere yourname@example.com"
 
 os_volume_source = "/path/to/img/on/kvm/host"
 

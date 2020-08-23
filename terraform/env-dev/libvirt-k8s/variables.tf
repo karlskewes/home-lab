@@ -32,7 +32,7 @@ variable "os_volume_size" {
 
 variable "os_volume_source" {
   description = "Source of OS volume to use for VM"
-  default     = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
+  default     = "https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 }
 
 variable "guest_user_name" {

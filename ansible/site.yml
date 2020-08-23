@@ -1,18 +1,6 @@
 ---
 # TODO(kskewes): Split into multiple files/roles
 
-# Python 3 is probably already installed and we can specify 'ansible_python_interpreter: /usr/bin/python3' in inventory
-# Uncomment below if using python 2 for some reason
-# - name: Install Python if not already installed.
-#   hosts: all
-#   tags: python
-#   gather_facts: false
-#   tasks:
-#   - name: Install Python 2.x
-#     raw: test -e /usr/bin/python || (apt update && apt install -y python python-simplejson)
-#     register: test
-#     changed_when: test.stdout
-
 - name: Base configuration of hosts
   hosts: all:!edgeos
   become: yes
@@ -23,7 +11,7 @@
       comment: Karl
       groups:
       - sudo
-      # - docker  ## Only possible once installed
+      # - docker  ## Only possible once installed (kubespray does)
       append: yes
       shell: /bin/bash
       state: present
@@ -101,34 +89,9 @@
   become: yes
   tags: rock64
   tasks:
-  - name: Install kernel
-    apt:
-      name: "{{ install_kernel }}"
-      state: present
-    notify: reboot_required
-    register: install_kernel
-  - name: Remove kernel
-    apt:
-      name: "{{ remove_kernel }}"
-      state: absent
-    notify: reboot_required
-  - name: Update extlinux
-    command: update-extlinux.sh rootfs
-    ignore_errors: True
-    when:
-    - install_kernel is changed
-    # notify: reboot_required  # Uncomment if/when add changed_when: logic
-    # This command requires confirmation
-    # - name: Upgrade bootloader
-    #   command: rock64_upgrade_bootloader.sh
-    #   ignore_errors: True
-    # This command requires confirmation
-    # - name: Upgrade SPI bootloard
-    #   command: rock64_write_spi_flash.sh
-    #   ignore_errors: True
-  - name: Disable zram-config service
+  - name: Disable Armbian zram-config service
     service:
-      name: zram-config
+      name: armbian-zram-config
       enabled: no
       state: stopped
     notify: reboot_required
