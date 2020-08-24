@@ -1,8 +1,18 @@
-NODE? :=
+# Kubernetes with Gitlab helper
+
+# Use commonly available shell
+SHELL := bash
+# Fail if piped commands fail - critical for CI/etc
+.SHELLFLAGS := -eu -o pipefail -c
+# Use one shell for a target, rather than shell per line
+.ONESHELL:
+
+
+N? :=
 # KUBESPRAY_VERSION := master
-## Alternatively by branch, eg: release-2.9
-KUBESPRAY_VERSION := release-2.12
-KUBESPRAY_KUBECONFIG_NODE := k8s-m-arm64-01.k8s
+## Alternatively by branch, eg: release-2.14
+KUBESPRAY_VERSION := master
+KUBESPRAY_KUBECONFIG_NODE := k8s-m-arm64-01
 KUBESPRAY_KUBECONFIG_OWNER := $(shell whoami)
 ANSIBLE_HOSTS := ansible/env-dev/hosts.ini
 ANSIBLE_CONFIG := ./ansible/ansible.cfg
@@ -23,8 +33,8 @@ shutdown-cluster: ## Shutdown all nodes in cluster
 .PHONY: start-kvm-hosts
 start-kvm-hosts: ## Start up KVM VM Hosts
 	for host in $(KVM_HOSTS); do \
-		ssh $(KVM_HOST) LIBVIRT_DEFAULT_URI=qemu:///system virsh start $${host}; \
-		done
+		ssh $(KVM_HOST) LIBVIRT_DEFAULT_URI=qemu:///system virsh start $${host}
+	done
 
 .PHONY: deploy-ansible-site
 deploy-ansible-site: ## Run your local ansible site.yml playbook
@@ -36,35 +46,29 @@ deploy-ansible-edgeos: ## Run your local ansible edgeos.yml playbook
 
 .PHONY: deploy-kubespray
 deploy-kubespray: ## Install/upgrade Kubespray
-	cd kubespray; \
-		git checkout "$(KUBESPRAY_VERSION)"; \
-		cd ..; \
-		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
+	cd kubespray
+	git checkout "$(KUBESPRAY_VERSION)"
+	cd ..
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
+
+.PHONY: deploy-terraform
+deploy-terraform: ## Terraform apply kvm
+	cd terraform/env-dev/libvirt-k8s
+	terraform apply
 
 .PHONY: rolling-upgrade-kubespray
 rolling-upgrade-kubespray: ## Rolling upgrade Kubespray
-	cd kubespray; \
-		git checkout "$(KUBESPRAY_VERSION)"; \
-		cd ..; \
-		ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/upgrade-cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
+	cd kubespray
+	git checkout "$(KUBESPRAY_VERSION)"
+	cd ..
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) kubespray/upgrade-cluster.yml --extra-vars "@ansible/kubespray_overrides.yml"
 
 .PHONY: retrieve-kubespray-kubeconfig
 retrieve-kubespray-kubeconfig: ## Retrieve kubespray kubeconfig from master
-	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo cp /etc/kubernetes/admin.conf ~/kubeconfig.conf; \
-	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chown $(KUBESPRAY_KUBECONFIG_OWNER):$(KUBESPRAY_KUBECONFIG_OWNER) ~/kubeconfig.conf; \
-	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chmod 600 ~/kubeconfig.conf; \
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo cp /etc/kubernetes/admin.conf ~/kubeconfig.conf
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chown $(KUBESPRAY_KUBECONFIG_OWNER):$(KUBESPRAY_KUBECONFIG_OWNER) ~/kubeconfig.conf
+	ssh $(KUBESPRAY_KUBECONFIG_NODE) sudo chmod 600 ~/kubeconfig.conf
 	scp $(KUBESPRAY_KUBECONFIG_NODE):kubeconfig.conf .
-
-.PHONY: deploy-rock64-updates
-deploy-rock64-updates: ## Update Rock64 bootloader
-	@echo "Install latest u-boot per Ansible then run below with tmux \n\n\
-	# ctrl+b : \n\
-	# set syncronize-panes on \n\n\
-	# create 6 panes and ssh to each rock64 \n\
-	sudo rock64_upgrade_bootloader.sh \n\
-	sudo rock64_write_spi_flash.sh \n\n\
-	# ctrl+b : \n\
-	# set syncronize-panes off"
 
 .PHONY: clean-rook
 clean-rook: ## Clean Rook Ceph data
@@ -72,31 +76,31 @@ clean-rook: ## Clean Rook Ceph data
 
 .PHONY: reset-kubespray
 reset-kubespray: ## Reset Kubespray cluster - will remove everything!
-	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(NODE)" kubespray/reset.yml
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(N)" kubespray/reset.yml
 
-.PHONY: add-node-kubespray
-add-node-kubespray: ## Add Kubespray node - usage: 'make add-node NODE=<your-node>'
-	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(NODE)" kubespray/scale.yml
+.PHONY: node-add-kubespray
+node-add-kubespray: ## Add Kubespray node - usage: 'make node-add-kubespray N=<your-node>'
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(N)" kubespray/scale.yml
 
-.PHONY: remove-node-kubespray
-remove-node-kubespray: ## Remove Kubespray node - usage: 'make remove-node NODE=<your-node>'
-	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(NODE)" kubespray/remove-node.yml
+.PHONY: node-remove-kubespray
+node-remove-kubespray: ## Remove Kubespray node - usage: 'make node-remove-kubespray N=<your-node>'
+	ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook -b -i $(ANSIBLE_HOSTS) --extra-vars "node=$(N)" kubespray/remove-node.yml
 
 .PHONY: setup-kubespray
 setup-kubespray: ## Setup Kubespray release version - one time operation
-	cd kubespray; \
-		git fetch upstream "$(KUBESPRAY_VERSION)"; \
-		git checkout -b "$(KUBESPRAY_VERSION)" "upstream/$(KUBESPRAY_VERSION)"
+	cd kubespray
+	git fetch upstream "$(KUBESPRAY_VERSION)"
+	git checkout -b "$(KUBESPRAY_VERSION)" "upstream/$(KUBESPRAY_VERSION)"
 
 .PHONY: update-kubespray
 update-kubespray: ## Update Kubespray repo and copy sample vars to local ansible
-	cd kubespray; \
-		git fetch upstream "$(KUBESPRAY_VERSION)"; \
-		git checkout "$(KUBESPRAY_VERSION)"; \
-		git merge "upstream/$(KUBESPRAY_VERSION)"; \
-		git push origin "$(KUBESPRAY_VERSION)"; \
-		cd ../ansible; \
-		cp -r ../kubespray/inventory/sample/group_vars/* env-dev/group_vars/
+	cd kubespray
+	git fetch upstream "$(KUBESPRAY_VERSION)"
+	git checkout "$(KUBESPRAY_VERSION)"
+	git merge "upstream/$(KUBESPRAY_VERSION)"
+	git push origin "$(KUBESPRAY_VERSION)"
+	cd ../ansible
+	cp -r ../kubespray/inventory/sample/group_vars/* env-dev/group_vars/
 
 
 .PHONY: help

@@ -1,8 +1,8 @@
 ---
 # These variables will be used to override defaults in kubespray
 kubeconfig_localhost: true
-enable_nodelocaldns: false  # Currently fails due to lack of multi-arch image
-kube_proxy_mode: iptables  # ipvs was broken when first running
+# enable_nodelocaldns: false  # Currently fails due to lack of multi-arch image
+# kube_proxy_mode: iptables  # ipvs was broken when first running
 cluster_name: k8s
 podsecuritypolicy_enabled: true
 kubelet_custom_flags:

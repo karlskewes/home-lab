@@ -4,6 +4,11 @@
 - name: Base configuration of hosts
   hosts: all:!edgeos
   become: yes
+  pre_tasks:
+  - name: Install python for Ansible
+    become: yes
+    raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal)
+    changed_when: False
   tasks:
   - name: Setup users
     user:

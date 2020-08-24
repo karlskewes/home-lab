@@ -23,7 +23,7 @@ growpart:
   devices: ["/"]
   ignore_growroot_disabled: false
 
-timezone: Pacific/Auckland
+timezone: Etc/UTC
 
 hostname: "${hostname}"
 fqdn: "${fqdn}"
