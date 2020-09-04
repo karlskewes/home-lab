@@ -1,6 +1,6 @@
-# Kubernetes with Gitlab
+# Home lab
 
-Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools where possible.
+Multi-arch Kubernetes cluster for experimenting with various tools.
 
 ## Prerequisites
 
@@ -13,9 +13,9 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
    - (will create) 3x Workers provisioned with Terraform
 
 **Software:**
-- [Install Ansible](https://docs.ansible.com)
-- [Install Terraform](https://terraform.io) 
-- [Install terraform-provider-libvirt](https://github.com/dmacvicar/terraform-provider-libvirt/)
+- [Ansible](https://docs.ansible.com)
+- [Terraform](https://terraform.io) 
+- [terraform-provider-libvirt](https://github.com/dmacvicar/terraform-provider-libvirt/)
 
 **Networking:**
 
@@ -53,4 +53,3 @@ Create and maintain a multi-arch Kubernetes cluster utilizing Gitlab CI/CD tools
    - `kubectl apply -f kubernetes/`
 7. BGP Peer EdgeRouter and Metallb
    - `make deploy-ansible-edgeos`
-8. TODO: Gitlab Setup once finish yak shaving above
