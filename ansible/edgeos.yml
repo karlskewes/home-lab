@@ -1,5 +1,13 @@
 # Ansible playbook to configure BGP peering on EdgeOS device
 ---
+- name: Gather Kubernetes Nodes Facts
+  hosts: k8s-cluster
+  become: no
+  tasks:
+  - name: Setup
+    setup:
+      gather_subset: network
+
 - name: Base configuration of hosts
   hosts: router
   become: no
@@ -16,12 +24,17 @@
       - set protocols bgp 64512 parameters router-id 192.168.2.1
       - set protocols bgp 64512 maximum-paths ibgp 32  # enable ECMP Load Balancing
 
+  - name: get vars
+    debug:
+      msg: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+    loop: "{{ groups['k8s-cluster'] }}"
+
   # This task will fail with a YAML error if a host is unreachable.
-  - name: BGP peer with metallb speakers  # daemonset on worker nodes
+  - name: BGP peer with metallb speakers  # daemonset on all nodes
     edgeos_config:
       lines:
       - "set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }} remote-as 64512"
-    loop: "{{ groups['kube-node'] }}"
+    loop: "{{ groups['k8s-cluster'] }}"
 
   # TODO: Remove this section when ingress setup
   # With ECMP was stateful app breaking due to nodes iptables routing parts of tcp
@@ -32,7 +45,7 @@
       - >
         set protocols bgp 64512 neighbor {{ hostvars[item]['ansible_default_ipv4']['address'] }}
         weight {{ hostvars[item]['ansible_default_ipv4']['address'].split('.')[-1][-2:] }}
-    loop: "{{ groups['kube-node'] }}"
+    loop: "{{ groups['k8s-cluster'] }}"
 
   - name: show ip bgp summary
     edgeos_command:
