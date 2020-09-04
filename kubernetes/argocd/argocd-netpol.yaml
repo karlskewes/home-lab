@@ -7,7 +7,7 @@ metadata:
   name: deny-from-other-namespaces
 spec:
   podSelector:
-    matchLabels:
+    matchLabels: {}
   ingress:
   - from:
     - podSelector: {}
@@ -31,18 +31,33 @@ spec:
   - ports:
     - port: 443  # kubernetes.default.svc
       protocol: TCP
+    - port: 6443  # kubernetes.default.svc
+      protocol: TCP
     to:
     - ipBlock:
         cidr: 172.20.0.1/32  # kubernetes.default.svc
     - ipBlock:
         cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
   - ports:
+    - port: 443  # kubernetes.default.svc
+      protocol: TCP
     - port: 6443  # kubernetes.default.svc
       protocol: TCP
     to:
     - ipBlock:
         cidr: 192.168.2.0/26  # masters
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha-haproxy
+    ports:
+    - port: 6379
+      protocol: TCP
   ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
   # Prometheus Scrape
   - from:
     - namespaceSelector:
@@ -75,7 +90,18 @@ spec:
     - port: 443
       protocol: TCP
     to: []
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha-haproxy
+    ports:
+    - port: 6379
+      protocol: TCP
   ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
   # Prometheus Scrape
   - from:
     - namespaceSelector:
@@ -103,9 +129,16 @@ spec:
     matchLabels:
       app.kubernetes.io/name: argocd-server
   egress:
+  # Gitlab.com git repo
+  - ports:
+    - port: 443
+      protocol: TCP
+    to: []
   # K8S API
   - ports:
     - port: 443  # kubernetes.default.svc
+      protocol: TCP
+    - port: 6443  # kubernetes.default.svc
       protocol: TCP
     to:
     - ipBlock:
@@ -113,12 +146,33 @@ spec:
     - ipBlock:
         cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
   - ports:
+    - port: 443  # kubernetes.default.svc
+      protocol: TCP
     - port: 6443  # kubernetes.default.svc
       protocol: TCP
     to:
     - ipBlock:
         cidr: 192.168.2.0/26  # masters
+  # Redis cache
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha-haproxy
+    ports:
+    - port: 6379
+      protocol: TCP
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-application-controller
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-repo-server
   ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
   # Prometheus Scrape
   - from:
     - namespaceSelector:
@@ -129,6 +183,111 @@ spec:
           app: prometheus
     ports:
     - port: 8083
+      protocol: TCP
+  policyTypes:
+  - Ingress
+  - Egress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: argocd-redis-ha-haproxy
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-redis-ha-haproxy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-redis-ha-haproxy
+  egress:
+  # Redis cache
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha
+    ports:
+    - port: 6379  # redis
+      protocol: TCP
+    - port: 26379  # sentinel
+      protocol: TCP
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha-haproxy
+    ports:
+    - port: 6379
+      protocol: TCP
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-application-controller
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-repo-server
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
+    ports:
+    - port: 6379
+      protocol: TCP
+  # Prometheus Scrape
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 8888
+      protocol: TCP
+  policyTypes:
+  - Ingress
+  - Egress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: argocd-redis-ha
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-redis-ha
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-redis-ha
+  egress:
+  # Redis cache
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha
+    ports:
+    - port: 6379  # redis
+      protocol: TCP
+    - port: 26379  # sentinel
+      protocol: TCP
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-redis-ha-haproxy
+    ports:
+    - port: 6379  # redis
+      protocol: TCP
+    - port: 26379  # sentinel
+      protocol: TCP
+  # Prometheus Scrape
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 6379
       protocol: TCP
   policyTypes:
   - Ingress

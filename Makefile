@@ -101,6 +101,10 @@ update-kubespray: ## Update Kubespray repo and copy sample vars to local ansible
 	git push origin "$(KUBESPRAY_VERSION)"
 	cd ../ansible
 	cp -r ../kubespray/inventory/sample/group_vars/* env-dev/group_vars/
+	@echo "
+	## Remember to label kube-system so Network Policies will match
+	kubectl label namespace kube-system name=kube-system
+	"
 
 
 .PHONY: help
