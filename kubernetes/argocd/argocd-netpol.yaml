@@ -38,14 +38,15 @@ spec:
         cidr: 172.20.0.1/32  # kubernetes.default.svc
     - ipBlock:
         cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
-  - ports:
-    - port: 443  # kubernetes.default.svc
-      protocol: TCP
-    - port: 6443  # kubernetes.default.svc
-      protocol: TCP
-    to:
     - ipBlock:
         cidr: 192.168.2.0/26  # masters
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-repo-server
+    ports:
+    - port: 8081
+      protocol: TCP
   - to:
     - podSelector:
         matchLabels:
@@ -58,6 +59,9 @@ spec:
     - podSelector:
         matchLabels:
           app.kubernetes.io/name: argocd-server
+    ports:
+    - port: 8082
+      protocol: TCP
   # Prometheus Scrape
   - from:
     - namespaceSelector:
@@ -101,7 +105,13 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/name: argocd-application-controller
+    - podSelector:
+        matchLabels:
           app.kubernetes.io/name: argocd-server
+    ports:
+    - port: 8081
+      protocol: TCP
   # Prometheus Scrape
   - from:
     - namespaceSelector:
@@ -145,12 +155,6 @@ spec:
         cidr: 172.20.0.1/32  # kubernetes.default.svc
     - ipBlock:
         cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
-  - ports:
-    - port: 443  # kubernetes.default.svc
-      protocol: TCP
-    - port: 6443  # kubernetes.default.svc
-      protocol: TCP
-    to:
     - ipBlock:
         cidr: 192.168.2.0/26  # masters
   # Redis cache
