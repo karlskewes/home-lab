@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  repositories: |
+    - url: https://gitlab.com/kskewes/home-lab.git
+      passwordSecret:
+        name: gitlab-home-lab
+        key: password
+      usernameSecret:
+        name: gitlab-home-lab
+        key: username
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: gitlab-home-lab
+  namespace: argocd
+spec:
+  encryptedData:
+    password: AgBt62iWhzkRitBBo3gz0yC+Ubao/lb28GWU3JQCtKrDAfBzCZ1FRiZzbHUSBsk2asRXcW2/E1qTRZymsB+ih/f9LAUn1QspCaHHlUdsJ/I9nmnJY+C8VD2yRuh91ZzgFv69AJNDNaZT9ynKePcwcm5iFYM1XpDULjooGxpbz/WMj1LbuticOHeP07xYaO34+qbVENBFkEW0Wb8BqRFeRhPCtr3jLyRUXeTtajr0zyhPwNDFIrOZZQh15PW5qYLv6Kc7YgkrAwe0i12dlOh5kWmTsOiBxyhRmdVmlsk9F/0IVwEN57HEDx5fnEo3PTKNi/YPwbUeStwW8TCuedjZxqK2vCt0otKgBPkBe2AIfpVdcHdmktofTt2hh7Ug588z7rlapAP/JtJ0cOwk9KmuBfyE6wgNz1tLhcuPr23mBzrHP8qaTsYAoT7IG76APB6Q9jgJ/JftzR2YIumRPGyEJ9oobP+ph05roXXrj6YrWmKzZpc1Cad7REE8XnJoTTkP0OsgN/mIWDQ/dv0pX97z4720cip0AmD2VXSo37ALPrGh/2gVccuPrLf5MKYFVSyOrpYLuS2xpRD6cv5s9BkwBamyvmjTDwzqA6AUCPlRIhRokm9QE1LYVu5UyZxgCrMM0dVKeCodpxlBnzThELrhIIR6clgDCmFxCx5X9Ke99RXnf8NwloT1aqzPU9qDOoGZWJr3lwfhjo+MGOtXcILBSog/0Qjh7g==
+    username: AgBE2F39K+MnpBZTzPidwzqsyUjEjDTgGFQjzActA4Gzio6xRCxJYJJpZNuyPER/bmKptg+BlV2VmlDFd3AYA0FNj8yWUynTqkb1UhcdEHif2j8nQDyHFaHyiF/X8JUz2BinQjv9NkDYCDPxvnhcYBEUKNKg46UV51X5cHWs/I1m/f/vH0sLzhvcnohjOLRi2s2GcDxBtQ7cN4R1pUWd9D3+uNWKp9xtFCLbF8ClkerdmIJjvyz4nyME/Cb4wsti67d6F7l5usHgjgHOZH5oor4h0o4+Jfxp54Bslcjwwi2tDU29WdyolccyGQXqeJjh4JWPL0cj9LxJYdV4DPMAa82/mmSGE+F0UhALmL73tyjFwAmQMNOwPabmIg5r/YdyqRORDQNBa0tjdTe6rkc72pg+Rrgb85jwYkuC/xCLUHuREECLZd0hVht/M8ZdNf7vqDT+ukDBNfMgbZ79mcvG6pGHImIrKGOXkt1aawERd2XvKCy+OKXSuvwWXvRXIi4D19b8KYfIpQS9qJMyC99TV3WHDI+PMuCPQzGo938lEVKGM37enepPAq0XYJ90m6hqVUMDwudqbyNKTb+1ENrOsZZMLoDH6gPU/1jq64xvx05aZImoz6u3KIZicxbOw8MzskYYJMkkMCypnFuYVWsoXWESrxTdkodyOXGW3MO6PoL01vV5FQKHAeBLFLTeEUWgcKWkcMOgC9sI2w==
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/part-of: argocd
+      name: gitlab-home-lab
+      namespace: argocd

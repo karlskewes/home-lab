@@ -1,0 +1,28 @@
+# collection of differences from upstream that must be in this file
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: repo-server
+    app.kubernetes.io/name: argocd-repo-server
+    app.kubernetes.io/part-of: argocd
+  name: argocd-repo-server
+  # <snip>
+  # disable submodules (kubespray)
+        env:
+        - name: ARGOCD_GIT_MODULES_ENABLED
+          value: "false"
+
+
+# Delete this we have own
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+
