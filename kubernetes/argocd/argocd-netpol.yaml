@@ -1,0 +1,135 @@
+---
+# FIXME: Remove when implemented all required policies
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  namespace: argocd
+  name: deny-from-other-namespaces
+spec:
+  podSelector:
+    matchLabels:
+  ingress:
+  - from:
+    - podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: argocd-application-controller
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-application-controller
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-application-controller
+  egress:
+  # K8S API
+  - ports:
+    - port: 443  # kubernetes.default.svc
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 172.20.0.1/32  # kubernetes.default.svc
+    - ipBlock:
+        cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
+  - ports:
+    - port: 6443  # kubernetes.default.svc
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 192.168.2.0/26  # masters
+  ingress:
+  # Prometheus Scrape
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 8082
+      protocol: TCP
+  policyTypes:
+  - Ingress
+  - Egress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-repo-server
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-repo-server
+  egress:
+  # Gitlab.com git repo
+  - ports:
+    - port: 443
+      protocol: TCP
+    to: []
+  ingress:
+  # Prometheus Scrape
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 8084
+      protocol: TCP
+  policyTypes:
+  - Ingress
+  - Egress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: argocd-server
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-server
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-server
+  egress:
+  # K8S API
+  - ports:
+    - port: 443  # kubernetes.default.svc
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 172.20.0.1/32  # kubernetes.default.svc
+    - ipBlock:
+        cidr: 10.233.0.1/32  # Kubespray kubernetes.default.svc
+  - ports:
+    - port: 6443  # kubernetes.default.svc
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 192.168.2.0/26  # masters
+  ingress:
+  # Prometheus Scrape
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 8083
+      protocol: TCP
+  policyTypes:
+  - Ingress
+  - Egress
