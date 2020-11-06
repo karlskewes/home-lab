@@ -123,6 +123,24 @@
       owner: root
       group: root
       mode: 0644
+  - name: Load bluetooth module on startup
+    copy:
+      content: "btusb"
+      dest: /etc/modules-load.d/btusb
+  - name: Load bluetooth module
+    modprobe:
+      name: btusb
+      state: present
+  - name: Install bluetooth packages
+    apt:
+      name: ["bluetooth", "bluez"]
+      state: present
+  - name: Start bluetooth service
+    service:
+      name: bluetooth
+      enabled: yes
+      masked: no
+      state: restarted
   handlers:
   - name: Reboot the server and wait for it to come back up.
     become: yes

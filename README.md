@@ -35,18 +35,12 @@ Multi-arch Kubernetes cluster for experimenting with various tools.
 
 ## Getting Started
 
-0. Git clone this repo and submodules ([kubespray](https://github.com/kubernetes-sigs/kubespray)) - `git clone --recurse-submodules ...`
 1. Prepare hardware
 2. Provison Terraform nodes
    - TODO: `make deploy-terraform`
 3. Configure Ansible
    - Edit Ansible inventory, variables as required
    - `make deploy-ansible-site`
-4. Ansible configure Kubernetes cluster
-   - Edit Ansible inventory, variables as required
-   - `make deploy-kubespray`
-5. Retrieve Kubernetes cluster-admin credentials
-   - `make retrive-kubespray-kubeconfig`
 6. Deploy Kubernetes applications
    - Edit as required
    - TODO: `make deploy-kubernetes`
