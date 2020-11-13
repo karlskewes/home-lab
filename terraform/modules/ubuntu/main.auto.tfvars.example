@@ -1,0 +1,20 @@
+# Provider overrides
+qemu_uri = "qemu+ssh://you@example.com/system"
+
+# Resource overrides
+
+guest_count = 3
+
+guest_user_name = "yourname"
+
+guest_user_ssh_authorized_key = "ssh-rsa YourKeyGoesHere yourname@example.com"
+
+guest_os_volume_source = "/path/to/img/on/kvm/host"
+
+guest_hostname = "ubuntu"
+
+guest_domain_name = "yourdomain"
+
+guest_memory = 2048
+
+guest_cpu = 1
