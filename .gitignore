@@ -3,3 +3,6 @@ admin.conf
 kubeconfig.conf
 # kubeadm key
 *.creds
+# tls
+*.crt
+*.key

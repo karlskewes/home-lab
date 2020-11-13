@@ -13,3 +13,7 @@ variable "guest_user_name" {
 variable "guest_user_ssh_authorized_key" {
   description = "Public SSH Key to be added to guest"
 }
+
+variable "guest_domain_name" {
+  description = "Domain name for TLS and uses"
+}
