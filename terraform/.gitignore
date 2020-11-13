@@ -10,3 +10,6 @@
 
 # Other secrets
 *secret*
+
+# lokomotive secret files
+lokocfg.vars

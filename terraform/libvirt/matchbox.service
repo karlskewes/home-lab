@@ -1,0 +1,22 @@
+[Unit]
+Description=matchbox
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=/usr/bin/docker kill matchbox
+ExecStartPre=/usr/bin/docker rm matchbox
+ExecStartPre=/usr/bin/docker pull quay.io/poseidon/matchbox:${matchbox_version}
+ExecStart=/usr/bin/docker run --name matchbox \
+  --net=host \
+  --rm \
+  -v /var/lib/matchbox:/var/lib/matchbox:Z \
+  -v /etc/matchbox:/etc/matchbox:Z,ro \
+  quay.io/poseidon/matchbox:${matchbox_version} \
+  -address=0.0.0.0:8080 \
+  -rpc-address=0.0.0.0:8081 \
+  -log-level=debug
+
+[Install]
+WantedBy=multi-user.target
