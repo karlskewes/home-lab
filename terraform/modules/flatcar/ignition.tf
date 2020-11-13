@@ -1,5 +1,5 @@
 data "ignition_config" "ignition" {
-  count = length(var.ignition_config) > 0 ? 0 : var.guest_count
+  count = var.custom_ignition ? 0 : var.guest_count
 
   users = [
     data.ignition_user.core[0].rendered,
@@ -20,7 +20,7 @@ data "ignition_config" "ignition" {
 }
 
 data "ignition_file" "hostname" {
-  count = length(var.ignition_config) > 0 ? 0 : var.guest_count
+  count = var.custom_ignition ? 0 : var.guest_count
 
   filesystem = "root"
   path       = "/etc/hostname"
@@ -32,20 +32,20 @@ data "ignition_file" "hostname" {
 }
 
 data "ignition_user" "core" {
-  count = length(var.ignition_config) > 0 ? 0 : 1
+  count = var.custom_ignition ? 0 : 1
   name  = "core"
 
   ssh_authorized_keys = [var.guest_user_ssh_authorized_key]
 }
 
 data "ignition_networkd_unit" "network-dhcp" {
-  count   = length(var.ignition_config) > 0 ? 0 : 1
+  count   = var.custom_ignition ? 0 : 1
   name    = "00-wired.network"
   content = file("${path.module}/units/00-wired.network")
 }
 
 data "ignition_systemd_unit" "etcd-member" {
-  count   = length(var.ignition_config) > 0 ? 0 : 1
+  count   = var.custom_ignition ? 0 : 1
   name    = "etcd-member.service"
   enabled = true
   dropin {
@@ -55,13 +55,13 @@ data "ignition_systemd_unit" "etcd-member" {
 }
 
 resource "random_string" "token" {
-  count   = length(var.ignition_config) > 0 ? 0 : 1
+  count   = var.custom_ignition ? 0 : 1
   length  = 16
   special = false
 }
 
 data "template_file" "etcd-member" {
-  count    = length(var.ignition_config) > 0 ? 0 : 1
+  count    = var.custom_ignition ? 0 : 1
   template = file("${path.module}/units/20-etcd-member.conf")
   vars = {
     node_name     = "${var.guest_hostname}-${format("%02d", count.index)}"

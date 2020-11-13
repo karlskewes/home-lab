@@ -26,7 +26,7 @@ resource "libvirt_ignition" "ignition" {
   count   = var.guest_count
   name    = "${var.guest_hostname}-${format("%02d", count.index)}-ignition"
   pool    = var.guest_pool_name
-  content = length(var.ignition_config) > 0 ? var.ignition_config : element(data.ignition_config.ignition.*.rendered, count.index)
+  content = var.custom_ignition ? var.ignition_config : element(data.ignition_config.ignition.*.rendered, count.index)
 }
 
 # domain/vm's to create
