@@ -4,7 +4,10 @@ After=docker.service
 Requires=docker.service
 
 [Service]
+# Prevent SystemD restarting service every 100ms and hitting rate limit
+RestartSec=5
 TimeoutStartSec=0
+ExecStartPre=/etc/matchbox/matchbox_getflatcar.sh stable current /var/lib/matchbox/assets
 ExecStartPre=-/usr/bin/docker kill matchbox
 ExecStartPre=-/usr/bin/docker rm matchbox
 ExecStartPre=/usr/bin/docker pull quay.io/poseidon/matchbox:${matchbox_version}

@@ -1,3 +1,8 @@
+# validate up:
+# 1. grpcurl -cacert ca.crt -cert matchbox_client.crt -key matchbox_client.key matchbox-00:8081 list
+# 2. openssl s_client -connect matchbox-00:8081 -CAfile ca.crt -cert matchbox_client.crt -key matchbox_client.key
+# 3. curl matchbox-00:8080/assets/flatcar
+
 data "ignition_user" "ssh" {
   name   = var.guest_user_name
   groups = ["docker", "sudo"]
@@ -26,6 +31,7 @@ data "ignition_config" "matchbox_ignition" {
   ]
   files = [
     data.ignition_file.matchbox_hostname.rendered,
+    data.ignition_file.matchbox_getflatcar.rendered,
     data.ignition_file.matchbox_tls_ca.rendered,
     data.ignition_file.matchbox_tls_cert.rendered,
     data.ignition_file.matchbox_tls_key.rendered,
@@ -42,11 +48,9 @@ data "ignition_file" "matchbox_hostname" {
   filesystem = "root"
   path       = "/etc/hostname"
   mode       = 420
-
   content {
-    content = "matchbox"
+    content = "matchbox-00"
   }
-
 }
 
 data "ignition_networkd_unit" "matchbox" {
@@ -62,7 +66,6 @@ data "ignition_user" "matchbox" {
   gecos          = 900
   uid            = 900
 }
-
 
 data "ignition_directory" "matchbox_etc" {
   filesystem = "root"
@@ -98,6 +101,17 @@ data "template_file" "matchbox_service" {
   template = file("./matchbox.service")
   vars = {
     matchbox_version = "v0.9.0"
+  }
+}
+
+data "ignition_file" "matchbox_getflatcar" {
+  filesystem = "root"
+  mode       = 448
+  uid        = 900
+  gid        = 900
+  path       = "/etc/matchbox/matchbox_getflatcar.sh"
+  content {
+    content = file("./matchbox_getflatcar.sh")
   }
 }
 
