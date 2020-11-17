@@ -1,9 +1,5 @@
 # Provider overrides
-uri_method = "qemu+ssh"
-
-uri_username = "yourusername"
-
-uri_hostname = "yourkvmhost"
+qemu_uri = "qemu+ssh://you@example.com/system"
 
 # Resource overrides
 

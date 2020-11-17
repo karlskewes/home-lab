@@ -3,6 +3,11 @@
 # 2. openssl s_client -connect matchbox-00:8081 -CAfile ca.crt -cert matchbox_client.crt -key matchbox_client.key
 # 3. curl matchbox-00:8080/assets/flatcar
 
+locals {
+  flatcar_version  = "2605.7.0"
+  matchbox_version = "v0.9.0"
+}
+
 data "ignition_user" "ssh" {
   name   = var.guest_user_name
   groups = ["docker", "sudo"]
@@ -12,6 +17,7 @@ data "ignition_user" "ssh" {
 
 module "matchbox_vm" {
   source                       = "../modules/flatcar/"
+  guest_count                  = 1
   qemu_uri                     = var.qemu_uri
   custom_ignition              = true
   guest_hostname               = "matchbox"
@@ -100,7 +106,8 @@ data "ignition_systemd_unit" "matchbox" {
 data "template_file" "matchbox_service" {
   template = file("./matchbox.service")
   vars = {
-    matchbox_version = "v0.9.0"
+    flatcar_version  = local.flatcar_version
+    matchbox_version = local.matchbox_version
   }
 }
 
