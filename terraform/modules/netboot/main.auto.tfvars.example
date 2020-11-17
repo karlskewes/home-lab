@@ -1,0 +1,14 @@
+# Provider overrides
+qemu_uri = "qemu+ssh://you@example.com/system"
+
+# Resource overrides
+
+guest_count = 3
+
+guest_hostname = "barevm"
+
+guest_domain_name = "yourdomain"
+
+guest_memory = 2048
+
+guest_cpu = 1
