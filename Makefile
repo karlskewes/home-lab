@@ -41,8 +41,29 @@ deploy-ansible-edgeos: ## Run your local ansible edgeos.yml playbook
 
 .PHONY: deploy-terraform
 deploy-terraform: ## Terraform apply kvm
-	cd terraform/env-dev/libvirt-k8s
-	terraform apply
+	@echo "Not implemented yet:
+	1. cd matchbox && terraform apply
+	2. cd typhoon && terraform apply
+	3. cd k8s-nodes && terraform apply
+	"
+
+.PHONY: update-k8s-nodes
+update-k8s-nodes: ## Update Kubernetes nodes FLATCAR_VERSION=2605.7.0
+	ssh matchbox-00 '/etc/matchbox/matchbox_getflatcar.sh stable $(FLATCAR_VERSION) /var/lib/matchbox/assets'
+	@echo "Kubernetes node update process:
+	1. matchbox - update flatcar linux version (passed to get flatcar script) for cache
+	2. matchbox - terraform destroy & terraform apply recreate & wait for ready
+	^^ consider just running get_flatcar.sh instead to pull new images
+	3. typhoon - terraform apply to update/recreate ignition/configs in matchbox
+	3. loop
+	4. kubernetes - drain node
+	5. cd terraform/k8s-node && terraform destroy node and its volume (without destroying all volumes)
+	6. cd terraform/typhoon && terraform destory null resource copy secrets ? - (required for provisioner to copy secrets)
+	6. cd terraform/typhoon && terraform apply  - copy secrets - hangs until vm created and ready for provisioner
+	7. cd terraform/k8s-node && terraform apply - apply to create replacement node
+	7. kubernetes - wait for new node to join cluster
+	8. continue loop
+	"
 
 .PHONY: help
 help:

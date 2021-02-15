@@ -13,3 +13,5 @@
 
 # lokomotive secret files
 lokocfg.vars
+# lokomotive state
+lokomotive-assets

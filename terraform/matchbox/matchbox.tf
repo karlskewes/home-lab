@@ -4,7 +4,7 @@
 # 3. curl matchbox-00:8080/assets/flatcar
 
 locals {
-  flatcar_version  = "2605.7.0"
+  flatcar_version  = "current"
   matchbox_version = "v0.9.0"
 }
 

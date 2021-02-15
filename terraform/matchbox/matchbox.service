@@ -4,7 +4,7 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-Restart=always
+Restart=on-failure
 # Prevent SystemD restarting service every 100ms and hitting rate limit
 RestartSec=5
 TimeoutStartSec=0

@@ -1,0 +1,72 @@
+# baremetalcluster.lokocfg
+
+
+variable "k8s_domain_name" {}
+variable "ssh_public_keys" {}
+
+
+cluster "bare-metal" {
+
+  # TODO verify
+  # Bootkube doesn't succeed otherwise
+  ignore_x509_cn_check = "true"
+
+  # Run OS that Matchbox already provides without second reboot
+  os_channel = "stable"
+  os_version = "current"
+  cached_install = "true"
+
+  # Change the location where lokoctl stores the cluster assets.
+  asset_dir = "./lokomotive-assets"
+  cluster_name = "loko"
+  k8s_domain_name = "k8s-m-amd64-00.${var.k8s_domain_name}"
+  ssh_pubkeys = var.ssh_public_keys
+
+  matchbox_ca_path = pathexpand("~/src/gitlab.com/kskewes/home-lab/terraform/matchbox/ca.crt")
+  matchbox_client_cert_path = pathexpand("~/src/gitlab.com/kskewes/home-lab/terraform/matchbox/matchbox_client.crt")
+  matchbox_client_key_path = pathexpand("~/src/gitlab.com/kskewes/home-lab/terraform/matchbox/matchbox_client.key")
+  matchbox_endpoint = "matchbox-00.${var.k8s_domain_name}:8081"
+  matchbox_http_endpoint = "http://matchbox-00.${var.k8s_domain_name}:8080"
+
+  controller_domains = [
+    "k8s-m-amd64-00.${var.k8s_domain_name}",
+  #  "k8s-m-amd64-01.${var.k8s_domain_name}",
+  #  "k8s-m-amd64-02.${var.k8s_domain_name}",
+  ]
+
+  controller_macs = [
+    "52:54:00:00:00:32",
+  #  "52:54:00:00:00:33",
+  #  "52:54:00:00:00:34",
+  ]
+
+  controller_names = [
+    "k8s-m-amd64-00",
+  #  "k8s-m-amd64-01",
+  #  "k8s-m-amd64-02",
+  ]
+
+  worker_domains = [
+    "k8s-w-amd64-00.${var.k8s_domain_name}",
+    "k8s-w-amd64-01.${var.k8s_domain_name}",
+    "k8s-w-amd64-02.${var.k8s_domain_name}",
+  ]
+
+  worker_macs = [
+    "52:54:00:00:00:64",
+    "52:54:00:00:00:65",
+    "52:54:00:00:00:66",
+  ]
+
+  worker_names = [
+    "k8s-w-amd64-00",
+    "k8s-w-amd64-01",
+    "k8s-w-amd64-02",
+  ]
+
+  labels = {
+    "k8s-w-amd64-00" = "topology.kubernetes.io/zone=a",
+    "k8s-w-amd64-01" = "topology.kubernetes.io/zone=b",
+    "k8s-w-amd64-02" = "topology.kubernetes.io/zone=c",
+  }
+}
